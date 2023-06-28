@@ -1,33 +1,37 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
+import { usernm, pswd } from './credentials/credentials';
 
 const app = express();
 app.use(bodyParser.json());
 
 // Connect to MongoDB
-mongoose.connect('mongodb://localhost/blogDB', { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect(`mongodb+srv://${usernm}:${pswd}@cluster0mm.ryumqgd.mongodb.net/`, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => {
-    console.log('Connected to MongoDB');
+    console.log('Connected to MongoDB successfully!..');
   })
   .catch(err => {
     console.error('Error connecting to MongoDB:', err);
   });
 
-// Define the article schema
+// article schema
 const articleSchema = new mongoose.Schema({
   title: { type: String, required: true },
   content: { type: String, required: true },
-  views: { type: Number, default: 0 }
+  category: { type: String, required: true },
+  views: { type: Number, default: 0 },
+  likes: { type: Number, default: 0 }
 });
 
-// Create the article model
+//  article 
 const Article = mongoose.model('Article', articleSchema);
 
 // Get all articles
 app.get('/articles', (req, res) => {
   Article.find()
     .then(articles => {
+      window.alert('here are the articles!!');
       res.json({ articles: articles });
     })
     .catch(err => {
@@ -38,12 +42,14 @@ app.get('/articles', (req, res) => {
 
 // Add a new article
 app.post('/articles', (req, res) => {
-  const { title, content } = req.body;
-  const newArticle = new Article({ title: title, content: content });
+  const { title, content, category } = req.body;
+
+  const newArticle = new Article({ title: title, content: content, category:category });
 
   newArticle.save()
     .then(article => {
       res.json(article);
+      console.log('article added !'); window.alert('Article has been added !');
     })
     .catch(err => {
       console.error('Error adding article:', err);
@@ -88,6 +94,69 @@ app.delete('/articles/:id', (req, res) => {
     });
 });
 
-app.listen(3000, () => {
-  console.log('Server is running on port 3000');
+// next endpoints -->
+
+// API endpoint to get articles by category
+app.get('/articles/:category', (req, res) => {
+  const category = req.params.category;
+
+  // Find articles by category in the database
+  Article.find({ category }, (err, articles) => {
+    if (err) {
+      console.error('Error retrieving articles:', err);
+      res.status(500).json({ error: 'Failed to retrieve articles' });
+    } else {
+      res.status(200).json(articles);
+    }
+  });
+});
+
+
+// API endpoint to update views for an article
+app.put('/articles/:id/views', (req, res) => {
+  const articleId = req.params.id;
+
+  // Update views for the article
+  Article.findByIdAndUpdate(
+    articleId,
+    { $inc: { views: 1 } },
+    { new: true },
+    (err, updatedArticle) => {
+      if (err) {
+        console.error('Error updating article views:', err);
+        res.status(500).json({ error: 'Failed to update article views' });
+      } else if (updatedArticle) {
+        res.status(200).json(updatedArticle);
+      } else {
+        res.status(404).json({ error: 'Article not found' });
+      }
+    }
+  );
+});
+
+// API endpoint to update likes for an article
+app.put('/articles/:id/likes', (req, res) => {
+  const articleId = req.params.id;
+
+  // Update likes for the article
+  Article.findByIdAndUpdate(
+    articleId,
+    { $inc: { likes: 1 } },
+    { new: true },
+    (err, updatedArticle) => {
+      if (err) {
+        console.error('Error updating article likes:', err);
+        res.status(500).json({ error: 'Failed to update article likes' });
+      } else if (updatedArticle) {
+        res.status(200).json(updatedArticle);
+      } else {
+        res.status(404).json({ error: 'Article not found' });
+      }
+    }
+  );
+});
+
+const port = 8000;
+app.listen(port, () => {
+  console.log('Server is running on port',port);
 });
