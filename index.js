@@ -1,10 +1,12 @@
-const express = require('express');
-const bodyParser = require('body-parser');
-const mongoose = require('mongoose');
-import { usernm, pswd } from './credentials/credentials';
+import express from "express";
+import bodyParser from "body-parser";
+import mongoose from "mongoose";
+import { usernm, pswd } from './credentials/credentials.js';
 
 const app = express();
-app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({
+  extended: true
+}));
 
 // Connect to MongoDB
 mongoose.connect(`mongodb+srv://${usernm}:${pswd}@cluster0mm.ryumqgd.mongodb.net/`, { useNewUrlParser: true, useUnifiedTopology: true })
@@ -31,8 +33,9 @@ const Article = mongoose.model('Article', articleSchema);
 app.get('/articles', (req, res) => {
   Article.find()
     .then(articles => {
-      window.alert('here are the articles!!');
+      //window.alert('here are the articles!!');
       res.json({ articles: articles });
+      console.log('showing srticles')
     })
     .catch(err => {
       console.error('Error getting articles:', err);
@@ -43,13 +46,14 @@ app.get('/articles', (req, res) => {
 // Add a new article
 app.post('/articles', (req, res) => {
   const { title, content, category } = req.body;
+  console.log(req.body);
 
   const newArticle = new Article({ title: title, content: content, category:category });
 
   newArticle.save()
     .then(article => {
       res.json(article);
-      console.log('article added !'); window.alert('Article has been added !');
+      console.log('article added !'); //window.alert('Article has been added !');
     })
     .catch(err => {
       console.error('Error adding article:', err);
