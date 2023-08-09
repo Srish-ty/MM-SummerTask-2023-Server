@@ -1,12 +1,19 @@
 import express from "express";
 import bodyParser from "body-parser";
 import mongoose from "mongoose";
+import cors  from 'cors';
+
 import { usernm, pswd } from './credentials/credentials.js';
 
 const app = express();
+app.use(bodyParser.json());
+/*
 app.use(bodyParser.urlencoded({
   extended: true
-}));
+}));*/
+
+app.use(cors())
+
 
 // Connect to MongoDB
 mongoose.connect(`mongodb+srv://${usernm}:${pswd}@cluster0mm.ryumqgd.mongodb.net/`, { useNewUrlParser: true, useUnifiedTopology: true })
